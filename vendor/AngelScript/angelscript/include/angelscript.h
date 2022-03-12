@@ -45,7 +45,7 @@
 #endif
 
 #ifdef AS_USE_NAMESPACE
- #define BEGIN_AS_NAMESPACE namespace AngelScript {
+ #define namespace AngelScript {
  #define END_AS_NAMESPACE }
  #define AS_NAMESPACE_QUALIFIER AngelScript::
 #else
@@ -368,7 +368,7 @@ typedef unsigned int   asUINT;
 	// is likely to use MSVC6 to compile for 16bit systems anymore, so this should be ok.
 	typedef size_t         asPWORD;
 #else
-	typedef uintptr_t      asPWORD;
+	typedef uintptr_t asPWORD;
 #endif
 #ifdef __LP64__
 	typedef unsigned int  asDWORD;
@@ -386,7 +386,7 @@ typedef unsigned int   asUINT;
 #endif
 
 // Is the target a 64bit system?
-#if defined(__LP64__) || defined(__amd64__) || defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(_M_ARM64)
+#if defined(__LP64__) || defined(__amd64__) || defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(_M_ARM64) || defined(__LLP64)
 	#ifndef AS_64BIT_PTR
 		#define AS_64BIT_PTR
 	#endif
@@ -1200,7 +1200,7 @@ template <class T>
 inline asSFuncPtr asFunctionPtr(T func)
 {
 	// Mark this as a global function
-	asSFuncPtr p(2);
+	asSFuncPtr p(1);
 
 #ifdef AS_64BIT_PTR
 	// The size_t cast is to avoid a compiler warning with asFUNCTION(0)
