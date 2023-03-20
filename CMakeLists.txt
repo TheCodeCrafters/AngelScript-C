@@ -1,14 +1,8 @@
-cmake_minimum_required(VERSION 3.21)
-project(AngelScript_C)
+cmake_minimum_required( VERSION 3.24 )
+project( AngelScript_C LANGUAGES CXX C )
 
-set(CMAKE_CXX_STANDARD 17)
+add_subdirectory( "${CMAKE_SOURCE_DIR}/vendor/sdk/angelscript/projects/cmake" )
 
-add_library(
-		AngelScript_C SHARED
-		include/AngelScript_c.h
-		src/AngelScript_c.cpp
-)
-
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/vendor/AngelScript/angelscript/projects/cmake angelscript)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/vendor/AngelScript/angelscript/include)
-target_link_libraries(AngelScript_C ${ANGELSCRIPT_LIBRARY_NAME})
+add_library( AngelScriptC STATIC src/angelscript_c.cpp include/angelscript_c.h )
+target_include_directories( AngelScriptC PUBLIC include )
+target_link_libraries( AngelScriptC angelscript )
