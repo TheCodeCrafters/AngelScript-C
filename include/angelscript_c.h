@@ -21,11 +21,9 @@
 	typedef struct asIScriptObject asIScriptObject;
 	typedef struct asITypeInfo asITypeInfo;
 	typedef struct asIScriptFunction asIScriptFunction;
-	typedef struct asIBinaryStream asIBinaryStream;
 	typedef struct asIJITCompiler asIJITCompiler;
 	typedef struct asIThreadManager asIThreadManager;
 	typedef struct asILockableSharedBool asILockableSharedBool;
-	typedef struct asIStringFactory asIStringFactory;
 	// endregion Data types
 
 	// region Enumerations and constants
@@ -159,7 +157,7 @@
 		asOBJ_NOCOUNT = ( 1 << 18 ),
 		asOBJ_APP_CLASS_ALIGN8 = ( 1 << 19 ),
 		asOBJ_IMPLICIT_HANDLE = ( 1 << 20 ),
-		asOBJ_MASK_VALID_FLAGS = 0x801FFFFF, // NOLINT(cppcoreguidelines-narrowing-conversions)
+		asOBJ_MASK_VALID_FLAGS = 0x801FFFFF,  // NOLINT(cppcoreguidelines-narrowing-conversions)
 		// Internal flags
 		asOBJ_SCRIPT_OBJECT = ( 1 << 21 ),
 		asOBJ_SHARED = ( 1 << 22 ),
@@ -310,25 +308,25 @@
 	typedef unsigned short asWORD;
 	typedef unsigned int asUINT;
 	#if ( defined( _MSC_VER ) && _MSC_VER <= 1200 ) || defined( __S3E__ ) || ( defined( _MSC_VER ) && defined( __clang__ ) )
-	// size_t is not really correct, since it only guaranteed to be large enough to hold the segment size.
-	// For example, on 16bit systems the size_t may be 16bits only even if pointers are 32bit. But nobody
-	// is likely to use MSVC6 to compile for 16bit systems anymore, so this should be ok.
-	typedef size_t asPWORD;
+		// size_t is not really correct, since it only guaranteed to be large enough to hold the segment size.
+		// For example, on 16bit systems the size_t may be 16bits only even if pointers are 32bit. But nobody
+		// is likely to use MSVC6 to compile for 16bit systems anymore, so this should be ok.
+		typedef size_t asPWORD;
 	#else
-	typedef uintptr_t asPWORD;
+		typedef uintptr_t asPWORD;
 	#endif
 	#ifdef __LP64__
-	typedef unsigned int asDWORD;
-	typedef unsigned long asQWORD;
-	typedef long asINT64;
+		typedef unsigned int asDWORD;
+		typedef unsigned long asQWORD;
+		typedef long asINT64;
 	#else
-	typedef unsigned long asDWORD;
+		typedef unsigned long asDWORD;
 		#if !defined( _MSC_VER ) && ( defined( __GNUC__ ) || defined( __MWERKS__ ) || defined( __SUNPRO_CC ) || defined( __psp2__ ) )
-	typedef uint64_t asQWORD;
-	typedef int64_t asINT64;
+			typedef uint64_t asQWORD;
+			typedef int64_t asINT64;
 		#else
-	typedef unsigned __int64 asQWORD;
-	typedef __int64 asINT64;
+			typedef unsigned __int64 asQWORD;
+			typedef __int64 asINT64;
 		#endif
 	#endif
 
@@ -371,15 +369,26 @@
 		#define AS_API
 	#endif
 
-	#ifndef ANGELSCRIPT_H
-		typedef struct {
-			const char* section;
-			int row;
-			int col;
-			asEMsgType type;
-			const char* message;
-		} asSMessageInfo;
-	#endif
+	typedef struct {
+		const char* section;
+		int row;
+		int col;
+		asEMsgType type;
+		const char* message;
+	} asSMessageInfo;
+
+	typedef struct {
+		const void* ( *getStringConstant )( const char* data, asUINT length );
+		int ( *releaseStringConstant )( const void* str );
+		int ( *getRawStringData )( const void* str, char* data, asUINT length );
+		void* param;
+	} asStringFactory;
+
+	typedef struct {
+		int ( *read )( void* ptr, asUINT size, void* param );
+		int ( *write )( const void* ptr, asUINT size, void* param );
+		void* param;
+	} asBinaryStream;
 
 	// region API functions
 	// Engine
@@ -455,7 +464,7 @@
 	AS_API asITypeInfo* asEngine_GetObjectTypeByIndex( asIScriptEngine* engine, asUINT index );
 
 	// String factory
-	AS_API int asEngine_RegisterStringFactory( asIScriptEngine* engine, const char* datatype, asIStringFactory* factory );
+	AS_API int asEngine_RegisterStringFactory( asIScriptEngine* engine, const char* datatype, asStringFactory* factory );
 	AS_API int asEngine_GetStringFactoryReturnTypeId( asIScriptEngine* engine, asDWORD* flags );
 
 	// Default array type
@@ -607,8 +616,8 @@
 	AS_API int asModule_UnbindAllImportedFunctions( asIScriptModule* module );
 
 	// Byte code saving and loading
-	AS_API int asModule_SaveByteCode( asIScriptModule* module, asIBinaryStream* out, bool stripDebugInfo );
-	AS_API int asModule_LoadByteCode( asIScriptModule* module, asIBinaryStream* in, bool* wasDebugInfoStripped );
+	AS_API int asModule_SaveByteCode( asIScriptModule* module, asBinaryStream* out, bool stripDebugInfo );
+	AS_API int asModule_LoadByteCode( asIScriptModule* module, asBinaryStream* in, bool* wasDebugInfoStripped );
 
 	// User data
 	AS_API void* asModule_SetUserData( asIScriptModule* module, void* data, asPWORD type );
@@ -887,11 +896,6 @@
 	AS_API void* asFunction_GetUserData( asIScriptFunction* function, asPWORD type );
 	// endregion Interface declarations - function
 
-	// region Interface declarations - binary stream
-	AS_API int asBinaryStream_Read( asIBinaryStream* stream, void* ptr, asUINT size );
-	AS_API int asBinaryStream_Write( asIBinaryStream* stream, const void* ptr, asUINT size );
-	// endregion Interface declarations - binary stream
-
 	// region Interface declarations - lockable shared bool
 	// Memory management
 	AS_API int asLockableSharedBool_AddRef( asILockableSharedBool* lockable );
@@ -905,12 +909,6 @@
 	AS_API void asLockableSharedBool_Lock( asILockableSharedBool* lockable );
 	AS_API void asLockableSharedBool_Unlock( asILockableSharedBool* lockable );
 	// endregion Interface declarations - lockable shared bool
-
-	// region Interface declarations - string factory
-	AS_API const void* asStringFactory_GetStringConstant( asIStringFactory* factory, const char* data, asUINT length );
-	AS_API int asStringFactory_ReleaseStringConstant( asIStringFactory* factory, const void* str );
-	AS_API int asStringFactory_GetRawStringData( asIStringFactory* factory, const void* str, char* data, asUINT* length );
-	// endregion Interface declarations - string factory
 
 	#ifdef __cplusplus
 		}
