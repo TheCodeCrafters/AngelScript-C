@@ -159,7 +159,7 @@
 		asOBJ_NOCOUNT = ( 1 << 18 ),
 		asOBJ_APP_CLASS_ALIGN8 = ( 1 << 19 ),
 		asOBJ_IMPLICIT_HANDLE = ( 1 << 20 ),
-		asOBJ_MASK_VALID_FLAGS = 0x801FFFFF,
+		asOBJ_MASK_VALID_FLAGS = 0x801FFFFF, // NOLINT(cppcoreguidelines-narrowing-conversions)
 		// Internal flags
 		asOBJ_SCRIPT_OBJECT = ( 1 << 21 ),
 		asOBJ_SHARED = ( 1 << 22 ),
@@ -617,87 +617,87 @@
 
 	// region Interface declarations - context
 	// Memory management
-	AS_API int asContext_AddRef( asIScriptModule* module );
-	AS_API int asContext_Release( asIScriptModule* module );
+	AS_API int asContext_AddRef( asIScriptContext* context );
+	AS_API int asContext_Release( asIScriptContext* context );
 
 	// Miscellaneous
-	AS_API asIScriptEngine* asContext_GetEngine( asIScriptModule* module );
+	AS_API asIScriptEngine* asContext_GetEngine( asIScriptContext* context );
 
 	// Execution
-	AS_API int asContext_Prepare( asIScriptModule* module, asIScriptFunction* func );
-	AS_API int asContext_Unprepare( asIScriptModule* module );
-	AS_API int asContext_Execute( asIScriptModule* module );
-	AS_API int asContext_Abort( asIScriptModule* module );
-	AS_API int asContext_Suspend( asIScriptModule* module );
-	AS_API asEContextState asContext_GetState( asIScriptModule* module );
-	AS_API int asContext_PushState( asIScriptModule* module );
-	AS_API int asContext_PopState( asIScriptModule* module );
-	AS_API bool asContext_IsNested( asIScriptModule* module, asUINT* nestCount );
+	AS_API int asContext_Prepare( asIScriptContext* context, asIScriptFunction* func );
+	AS_API int asContext_Unprepare( asIScriptContext* context );
+	AS_API int asContext_Execute( asIScriptContext* context );
+	AS_API int asContext_Abort( asIScriptContext* context );
+	AS_API int asContext_Suspend( asIScriptContext* context );
+	AS_API asEContextState asContext_GetState( asIScriptContext* context );
+	AS_API int asContext_PushState( asIScriptContext* context );
+	AS_API int asContext_PopState( asIScriptContext* context );
+	AS_API bool asContext_IsNested( asIScriptContext* context, asUINT* nestCount );
 
 	// Object pointer for calling class methods
-	AS_API int asContext_SetObject( asIScriptModule* module, void* obj );
+	AS_API int asContext_SetObject( asIScriptContext* context, void* obj );
 
 	// Arguments
-	AS_API int asContext_SetArgByte( asIScriptModule* module, asUINT arg, asBYTE value );
-	AS_API int asContext_SetArgWord( asIScriptModule* module, asUINT arg, asWORD value );
-	AS_API int asContext_SetArgDWord( asIScriptModule* module, asUINT arg, asDWORD value );
-	AS_API int asContext_SetArgQWord( asIScriptModule* module, asUINT arg, asQWORD value );
-	AS_API int asContext_SetArgFloat( asIScriptModule* module, asUINT arg, float value );
-	AS_API int asContext_SetArgDouble( asIScriptModule* module, asUINT arg, double value );
-	AS_API int asContext_SetArgAddress( asIScriptModule* module, asUINT arg, void* addr );
-	AS_API int asContext_SetArgObject( asIScriptModule* module, asUINT arg, void* obj );
-	AS_API int asContext_SetArgVarType( asIScriptModule* module, asUINT arg, void* ptr, int typeId );
-	AS_API void* asContext_GetAddressOfArg( asIScriptModule* module, asUINT arg );
+	AS_API int asContext_SetArgByte( asIScriptContext* context, asUINT arg, asBYTE value );
+	AS_API int asContext_SetArgWord( asIScriptContext* context, asUINT arg, asWORD value );
+	AS_API int asContext_SetArgDWord( asIScriptContext* context, asUINT arg, asDWORD value );
+	AS_API int asContext_SetArgQWord( asIScriptContext* context, asUINT arg, asQWORD value );
+	AS_API int asContext_SetArgFloat( asIScriptContext* context, asUINT arg, float value );
+	AS_API int asContext_SetArgDouble( asIScriptContext* context, asUINT arg, double value );
+	AS_API int asContext_SetArgAddress( asIScriptContext* context, asUINT arg, void* addr );
+	AS_API int asContext_SetArgObject( asIScriptContext* context, asUINT arg, void* obj );
+	AS_API int asContext_SetArgVarType( asIScriptContext* context, asUINT arg, void* ptr, int typeId );
+	AS_API void* asContext_GetAddressOfArg( asIScriptContext* context, asUINT arg );
 
 	// Return value
-	AS_API asBYTE asContext_GetReturnByte( asIScriptModule* module );
-	AS_API asWORD asContext_GetReturnWord( asIScriptModule* module );
-	AS_API asDWORD asContext_GetReturnDWord( asIScriptModule* module );
-	AS_API asQWORD asContext_GetReturnQWord( asIScriptModule* module );
-	AS_API float asContext_GetReturnFloat( asIScriptModule* module );
-	AS_API double asContext_GetReturnDouble( asIScriptModule* module );
-	AS_API void* asContext_GetReturnAddress( asIScriptModule* module );
-	AS_API void* asContext_GetReturnObject( asIScriptModule* module );
-	AS_API void* asContext_GetAddressOfReturnValue( asIScriptModule* module );
+	AS_API asBYTE asContext_GetReturnByte( asIScriptContext* context );
+	AS_API asWORD asContext_GetReturnWord( asIScriptContext* context );
+	AS_API asDWORD asContext_GetReturnDWord( asIScriptContext* context );
+	AS_API asQWORD asContext_GetReturnQWord( asIScriptContext* context );
+	AS_API float asContext_GetReturnFloat( asIScriptContext* context );
+	AS_API double asContext_GetReturnDouble( asIScriptContext* context );
+	AS_API void* asContext_GetReturnAddress( asIScriptContext* context );
+	AS_API void* asContext_GetReturnObject( asIScriptContext* context );
+	AS_API void* asContext_GetAddressOfReturnValue( asIScriptContext* context );
 
 	// Exception handling
-	AS_API int asContext_SetException( asIScriptModule* module, const char* info, bool allowCatch );
-	AS_API int asContext_GetExceptionLineNumber( asIScriptModule* module, int* column, const char** sectionName );
-	AS_API asIScriptFunction* asContext_GetExceptionFunction( asIScriptModule* module );
-	AS_API const char* asContext_GetExceptionString( asIScriptModule* module );
-	AS_API bool asContext_WillExceptionBeCaught( asIScriptModule* module );
-	AS_API int asContext_SetExceptionCallback( asIScriptModule* module, asFUNCTION_t callback, void* obj, int callConv );
-	AS_API void asContext_ClearExceptionCallback( asIScriptModule* module );
+	AS_API int asContext_SetException( asIScriptContext* context, const char* info, bool allowCatch );
+	AS_API int asContext_GetExceptionLineNumber( asIScriptContext* context, int* column, const char** sectionName );
+	AS_API asIScriptFunction* asContext_GetExceptionFunction( asIScriptContext* context );
+	AS_API const char* asContext_GetExceptionString( asIScriptContext* context );
+	AS_API bool asContext_WillExceptionBeCaught( asIScriptContext* context );
+	AS_API int asContext_SetExceptionCallback( asIScriptContext* context, asFUNCTION_t callback, void* obj, int callConv );
+	AS_API void asContext_ClearExceptionCallback( asIScriptContext* context );
 
 	// Debugging
-	AS_API int asContext_SetLineCallback( asIScriptModule* module, asFUNCTION_t callback, void* obj, int callConv );
-	AS_API void asContext_ClearLineCallback( asIScriptModule* module );
-	AS_API asUINT asContext_GetCallstackSize( asIScriptModule* module );
-	AS_API asIScriptFunction* asContext_GetFunction( asIScriptModule* module, asUINT stackLevel );
-	AS_API int asContext_GetLineNumber( asIScriptModule* module, asUINT stackLevel, int* column, const char** sectionName );
-	AS_API int asContext_GetVarCount( asIScriptModule* module, asUINT stackLevel );
-	AS_API int asContext_GetVar( asIScriptModule* module, asUINT varIndex, asUINT stackLevel, const char** name, int* typeId, asETypeModifiers* typeModifiers, bool* isVarOnHeap, int* stackOffset );
-	AS_API const char* asContext_GetVarDeclaration( asIScriptModule* module, asUINT varIndex, asUINT stackLevel, bool includeNamespace = false );
-	AS_API void* asContext_GetAddressOfVar( asIScriptModule* module, asUINT varIndex, asUINT stackLevel, bool dontDereference, bool returnAddressOfUnitializedObjects );
-	AS_API bool asContext_IsVarInScope( asIScriptModule* module, asUINT varIndex, asUINT stackLevel );
-	AS_API int asContext_GetThisTypeId( asIScriptModule* module, asUINT stackLevel );
-	AS_API void* asContext_GetThisPointer( asIScriptModule* module, asUINT stackLevel );
-	AS_API asIScriptFunction* asContext_GetSystemFunction( asIScriptModule* module );
+	AS_API int asContext_SetLineCallback( asIScriptContext* context, asFUNCTION_t callback, void* obj, int callConv );
+	AS_API void asContext_ClearLineCallback( asIScriptContext* context );
+	AS_API asUINT asContext_GetCallstackSize( asIScriptContext* context );
+	AS_API asIScriptFunction* asContext_GetFunction( asIScriptContext* context, asUINT stackLevel );
+	AS_API int asContext_GetLineNumber( asIScriptContext* context, asUINT stackLevel, int* column, const char** sectionName );
+	AS_API int asContext_GetVarCount( asIScriptContext* context, asUINT stackLevel );
+	AS_API int asContext_GetVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, const char** name, int* typeId, asETypeModifiers* typeModifiers, bool* isVarOnHeap, int* stackOffset );
+	AS_API const char* asContext_GetVarDeclaration( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, bool includeNamespace = false );
+	AS_API void* asContext_GetAddressOfVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, bool dontDereference, bool returnAddressOfUnitializedObjects );
+	AS_API bool asContext_IsVarInScope( asIScriptContext* context, asUINT varIndex, asUINT stackLevel );
+	AS_API int asContext_GetThisTypeId( asIScriptContext* context, asUINT stackLevel );
+	AS_API void* asContext_GetThisPointer( asIScriptContext* context, asUINT stackLevel );
+	AS_API asIScriptFunction* asContext_GetSystemFunction( asIScriptContext* context );
 
 	// User data
-	AS_API void* asContext_SetUserData( asIScriptModule* module, void* data, asPWORD type );
-	AS_API void* asContext_GetUserData( asIScriptModule* module, asPWORD type );
+	AS_API void* asContext_SetUserData( asIScriptContext* context, void* data, asPWORD type );
+	AS_API void* asContext_GetUserData( asIScriptContext* context, asPWORD type );
 
 	// Serialization
-	AS_API int asContext_StartDeserialization( asIScriptModule* module );
-	AS_API int asContext_FinishDeserialization( asIScriptModule* module );
-	AS_API int asContext_PushFunction( asIScriptModule* module, asIScriptFunction* func, void* object );
-	AS_API int asContext_GetStateRegisters( asIScriptModule* module, asUINT stackLevel, asIScriptFunction** callingSystemFunction, asIScriptFunction** initialFunction, asDWORD* origStackPointer, asDWORD* argumentsSize, asQWORD* valueRegister, void** objectRegister, asITypeInfo** objectTypeRegister );
-	AS_API int asContext_GetCallStateRegisters( asIScriptModule* module, asUINT stackLevel, asDWORD* stackFramePointer, asIScriptFunction** currentFunction, asDWORD* programPointer, asDWORD* stackPointer, asDWORD* stackIndex );
-	AS_API int asContext_SetStateRegisters( asIScriptModule* module, asUINT stackLevel, asIScriptFunction* callingSystemFunction, asIScriptFunction* initialFunction, asDWORD origStackPointer, asDWORD argumentsSize, asQWORD valueRegister, void* objectRegister, asITypeInfo* objectTypeRegister );
-	AS_API int asContext_SetCallStateRegisters( asIScriptModule* module, asUINT stackLevel, asDWORD stackFramePointer, asIScriptFunction* currentFunction, asDWORD programPointer, asDWORD stackPointer, asDWORD stackIndex );
-	AS_API int asContext_GetArgsOnStackCount( asIScriptModule* module, asUINT stackLevel );
-	AS_API int asContext_GetArgOnStack( asIScriptModule* module, asUINT stackLevel, asUINT arg, int* typeId, asUINT* flags, void** address );
+	AS_API int asContext_StartDeserialization( asIScriptContext* context );
+	AS_API int asContext_FinishDeserialization( asIScriptContext* context );
+	AS_API int asContext_PushFunction( asIScriptContext* context, asIScriptFunction* func, void* object );
+	AS_API int asContext_GetStateRegisters( asIScriptContext* context, asUINT stackLevel, asIScriptFunction** callingSystemFunction, asIScriptFunction** initialFunction, asDWORD* origStackPointer, asDWORD* argumentsSize, asQWORD* valueRegister, void** objectRegister, asITypeInfo** objectTypeRegister );
+	AS_API int asContext_GetCallStateRegisters( asIScriptContext* context, asUINT stackLevel, asDWORD* stackFramePointer, asIScriptFunction** currentFunction, asDWORD* programPointer, asDWORD* stackPointer, asDWORD* stackIndex );
+	AS_API int asContext_SetStateRegisters( asIScriptContext* context, asUINT stackLevel, asIScriptFunction* callingSystemFunction, asIScriptFunction* initialFunction, asDWORD origStackPointer, asDWORD argumentsSize, asQWORD valueRegister, void* objectRegister, asITypeInfo* objectTypeRegister );
+	AS_API int asContext_SetCallStateRegisters( asIScriptContext* context, asUINT stackLevel, asDWORD stackFramePointer, asIScriptFunction* currentFunction, asDWORD programPointer, asDWORD stackPointer, asDWORD stackIndex );
+	AS_API int asContext_GetArgsOnStackCount( asIScriptContext* context, asUINT stackLevel );
+	AS_API int asContext_GetArgOnStack( asIScriptContext* context, asUINT stackLevel, asUINT arg, int* typeId, asUINT* flags, void** address );
 	// endregion Interface declarations - context
 
 	// region Interface declarations - generic
