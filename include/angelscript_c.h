@@ -5,6 +5,8 @@
 #ifndef ANGELSCRIPT_C_H
 	#define ANGELSCRIPT_C_H
 
+	#include "stddef.h"
+
 	#ifdef __cplusplus
 		extern "C" {
 	#endif
@@ -307,28 +309,25 @@
 	typedef unsigned char asBYTE;
 	typedef unsigned short asWORD;
 	typedef unsigned int asUINT;
-	#if ( defined( _MSC_VER ) && _MSC_VER <= 1200 ) || defined( __S3E__ ) || ( defined( _MSC_VER ) && defined( __clang__ ) )
-		// size_t is not really correct, since it only guaranteed to be large enough to hold the segment size.
-		// For example, on 16bit systems the size_t may be 16bits only even if pointers are 32bit. But nobody
-		// is likely to use MSVC6 to compile for 16bit systems anymore, so this should be ok.
-		typedef size_t asPWORD;
-	#else
-		typedef uintptr_t asPWORD;
-	#endif
+	typedef unsigned char asBYTE;
+	typedef unsigned short asWORD;
+	typedef unsigned int asUINT;
+	typedef size_t asPWORD;
 	#ifdef __LP64__
-		typedef unsigned int asDWORD;
+		typedef unsigned int  asDWORD;
 		typedef unsigned long asQWORD;
 		typedef long asINT64;
 	#else
 		typedef unsigned long asDWORD;
-		#if !defined( _MSC_VER ) && ( defined( __GNUC__ ) || defined( __MWERKS__ ) || defined( __SUNPRO_CC ) || defined( __psp2__ ) )
-			typedef uint64_t asQWORD;
-			typedef int64_t asINT64;
+		#if defined(__GNUC__) || defined(__MWERKS__)
+			typedef unsigned long long asQWORD;
+			typedef long long asINT64;
 		#else
 			typedef unsigned __int64 asQWORD;
 			typedef __int64 asINT64;
 		#endif
 	#endif
+	typedef enum { asTRUE = 1, asFALSE = 0 } asBOOL;
 
 	typedef void ( *asFUNCTION_t )();
 	typedef void ( *asGENFUNC_t )( asIScriptGeneric* );
@@ -407,8 +406,8 @@
 	AS_API void asReleaseExclusiveLock();
 	AS_API void asAcquireSharedLock();
 	AS_API void asReleaseSharedLock();
-	AS_API int asAtomicInc( int& value );
-	AS_API int asAtomicDec( int& value );
+	AS_API int asAtomicInc( int* value );
+	AS_API int asAtomicDec( int* value );
 	AS_API int asThreadCleanup();
 
 	// Memory management
@@ -432,7 +431,7 @@
 	AS_API asPWORD asEngine_GetEngineProperty( asIScriptEngine* engine, asEEngineProp property );
 
 	// Compiler messages
-	AS_API int asEngine_SetMessageCallback( asIScriptEngine* engine, asFUNCTION_t& callback, void* obj, asDWORD callConv );
+	AS_API int asEngine_SetMessageCallback( asIScriptEngine* engine, asFUNCTION_t* callback, void* obj, asDWORD callConv );
 	AS_API int asEngine_ClearMessageCallback( asIScriptEngine* engine );
 	AS_API int asEngine_WriteMessage( asIScriptEngine* engine, char* section, int row, int col, asEMsgType type, char* message );
 
@@ -441,7 +440,7 @@
 	AS_API asIJITCompiler* asEngine_GetJITCompiler( asIScriptEngine* engine );
 
 	// Global functions
-	AS_API int asEngine_RegisterGlobalFunction( asIScriptEngine* engine, char* declaration, asFUNCTION_t& funcPointer, asDWORD callConv, void* auxiliary );
+	AS_API int asEngine_RegisterGlobalFunction( asIScriptEngine* engine, char* declaration, asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary );
 	AS_API asUINT asEngine_GetGlobalFunctionCount( asIScriptEngine* engine );
 	AS_API asIScriptFunction* asEngine_GetGlobalFunctionByIndex( asIScriptEngine* engine, asUINT index );
 	AS_API asIScriptFunction* asEngine_GetGlobalFunctionByDecl( asIScriptEngine* engine, char* declaration );
@@ -449,15 +448,15 @@
 	// Global properties
 	AS_API int asEngine_RegisterGlobalProperty( asIScriptEngine* engine, const char* declaration, void* pointer );
 	AS_API asUINT asEngine_GetGlobalPropertyCount( asIScriptEngine* engine );
-	AS_API int asEngine_GetGlobalPropertyByIndex( asIScriptEngine* engine, asUINT index, const char** name, const char** nameSpace, int* typeId, bool* isConst, const char** configGroup, void** pointer, asDWORD* accessMask );
+	AS_API int asEngine_GetGlobalPropertyByIndex( asIScriptEngine* engine, asUINT index, const char** name, const char** nameSpace, int* typeId, asBOOL* isConst, const char** configGroup, void** pointer, asDWORD* accessMask );
 	AS_API int asEngine_GetGlobalPropertyIndexByName( asIScriptEngine* engine, const char* name );
 	AS_API int asEngine_GetGlobalPropertyIndexByDecl( asIScriptEngine* engine, const char* decl );
 
 	// Object types
 	AS_API int asEngine_RegisterObjectType( asIScriptEngine* engine, const char* obj, int byteSize, asDWORD flags );
-	AS_API int asEngine_RegisterObjectProperty( asIScriptEngine* engine, const char* obj, const char* declaration, int byteOffset, int compositeOffset, bool isCompositeIndirect );
-	AS_API int asEngine_RegisterObjectMethod( asIScriptEngine* engine, const char* obj, const char* declaration, const asFUNCTION_t& funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, bool isCompositeIndirect );
-	AS_API int asEngine_RegisterObjectBehaviour( asIScriptEngine* engine, const char* obj, asEBehaviours behaviour, const char* declaration, const asFUNCTION_t& funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, bool isCompositeIndirect );
+	AS_API int asEngine_RegisterObjectProperty( asIScriptEngine* engine, const char* obj, const char* declaration, int byteOffset, int compositeOffset, asBOOL isCompositeIndirect );
+	AS_API int asEngine_RegisterObjectMethod( asIScriptEngine* engine, const char* obj, const char* declaration, const asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, asBOOL isCompositeIndirect );
+	AS_API int asEngine_RegisterObjectBehaviour( asIScriptEngine* engine, const char* obj, asEBehaviours behaviour, const char* declaration, const asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, asBOOL isCompositeIndirect );
 	AS_API int asEngine_RegisterInterface( asIScriptEngine* engine, const char* name );
 	AS_API int asEngine_RegisterInterfaceMethod( asIScriptEngine* engine, const char* intf, const char* declaration );
 	AS_API asUINT asEngine_GetObjectTypeCount( asIScriptEngine* engine );
@@ -507,7 +506,7 @@
 
 	// Type identification
 	AS_API int asEngine_GetTypeIdByDecl( asIScriptEngine* engine, const char* decl );
-	AS_API const char* asEngine_GetTypeDeclaration( asIScriptEngine* engine, int typeId, bool includeNamespace );
+	AS_API const char* asEngine_GetTypeDeclaration( asIScriptEngine* engine, int typeId, asBOOL includeNamespace );
 	AS_API int asEngine_GetSizeOfPrimitiveType( asIScriptEngine* engine, int typeId );
 	AS_API asITypeInfo* asEngine_GetTypeInfoById( asIScriptEngine* engine, int typeId );
 	AS_API asITypeInfo* asEngine_GetTypeInfoByName( asIScriptEngine* engine, const char* name );
@@ -522,7 +521,7 @@
 	AS_API int asEngine_AssignScriptObject( asIScriptEngine* engine, void* dstObj, void* srcObj, const asITypeInfo* type );
 	AS_API void asEngine_ReleaseScriptObject( asIScriptEngine* engine, void* obj, const asITypeInfo* type );
 	AS_API void asEngine_AddRefScriptObject( asIScriptEngine* engine, void* obj, const asITypeInfo* type );
-	AS_API int asEngine_RefCastObject( asIScriptEngine* engine, void* obj, asITypeInfo* fromType, asITypeInfo* toType, void** newPtr, bool useOnlyImplicitCast );
+	AS_API int asEngine_RefCastObject( asIScriptEngine* engine, void* obj, asITypeInfo* fromType, asITypeInfo* toType, void** newPtr, asBOOL useOnlyImplicitCast );
 	AS_API asILockableSharedBool* asEngine_GetWeakRefFlagOfScriptObject( asIScriptEngine* engine, void* obj, const asITypeInfo* type );
 
 	// Context pooling
@@ -585,8 +584,8 @@
 	AS_API asUINT asModule_GetGlobalVarCount( asIScriptModule* module );
 	AS_API int asModule_GetGlobalVarIndexByName( asIScriptModule* module, const char* name );
 	AS_API int asModule_GetGlobalVarIndexByDecl( asIScriptModule* module, const char* decl );
-	AS_API const char* asModule_GetGlobalVarDeclaration( asIScriptModule* module, asUINT index, bool includeNamespace = false );
-	AS_API int asModule_GetGlobalVar( asIScriptModule* module, asUINT index, const char** name, const char** nameSpace, int* typeId, bool* isConst );
+	AS_API const char* asModule_GetGlobalVarDeclaration( asIScriptModule* module, asUINT index, asBOOL includeNamespace );
+	AS_API int asModule_GetGlobalVar( asIScriptModule* module, asUINT index, const char** name, const char** nameSpace, int* typeId, asBOOL* isConst );
 	AS_API void* asModule_GetAddressOfGlobalVar( asIScriptModule* module, asUINT index );
 	AS_API int asModule_RemoveGlobalVar( asIScriptModule* module, asUINT index );
 
@@ -616,8 +615,8 @@
 	AS_API int asModule_UnbindAllImportedFunctions( asIScriptModule* module );
 
 	// Byte code saving and loading
-	AS_API int asModule_SaveByteCode( asIScriptModule* module, asBinaryStream* out, bool stripDebugInfo );
-	AS_API int asModule_LoadByteCode( asIScriptModule* module, asBinaryStream* in, bool* wasDebugInfoStripped );
+	AS_API int asModule_SaveByteCode( asIScriptModule* module, asBinaryStream* out, asBOOL stripDebugInfo );
+	AS_API int asModule_LoadByteCode( asIScriptModule* module, asBinaryStream* in, asBOOL* wasDebugInfoStripped );
 
 	// User data
 	AS_API void* asModule_SetUserData( asIScriptModule* module, void* data, asPWORD type );
@@ -641,7 +640,7 @@
 	AS_API asEContextState asContext_GetState( asIScriptContext* context );
 	AS_API int asContext_PushState( asIScriptContext* context );
 	AS_API int asContext_PopState( asIScriptContext* context );
-	AS_API bool asContext_IsNested( asIScriptContext* context, asUINT* nestCount );
+	AS_API asBOOL asContext_IsNested( asIScriptContext* context, asUINT* nestCount );
 
 	// Object pointer for calling class methods
 	AS_API int asContext_SetObject( asIScriptContext* context, void* obj );
@@ -670,11 +669,11 @@
 	AS_API void* asContext_GetAddressOfReturnValue( asIScriptContext* context );
 
 	// Exception handling
-	AS_API int asContext_SetException( asIScriptContext* context, const char* info, bool allowCatch );
+	AS_API int asContext_SetException( asIScriptContext* context, const char* info, asBOOL allowCatch );
 	AS_API int asContext_GetExceptionLineNumber( asIScriptContext* context, int* column, const char** sectionName );
 	AS_API asIScriptFunction* asContext_GetExceptionFunction( asIScriptContext* context );
 	AS_API const char* asContext_GetExceptionString( asIScriptContext* context );
-	AS_API bool asContext_WillExceptionBeCaught( asIScriptContext* context );
+	AS_API asBOOL asContext_WillExceptionBeCaught( asIScriptContext* context );
 	AS_API int asContext_SetExceptionCallback( asIScriptContext* context, asFUNCTION_t callback, void* obj, int callConv );
 	AS_API void asContext_ClearExceptionCallback( asIScriptContext* context );
 
@@ -685,10 +684,10 @@
 	AS_API asIScriptFunction* asContext_GetFunction( asIScriptContext* context, asUINT stackLevel );
 	AS_API int asContext_GetLineNumber( asIScriptContext* context, asUINT stackLevel, int* column, const char** sectionName );
 	AS_API int asContext_GetVarCount( asIScriptContext* context, asUINT stackLevel );
-	AS_API int asContext_GetVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, const char** name, int* typeId, asETypeModifiers* typeModifiers, bool* isVarOnHeap, int* stackOffset );
-	AS_API const char* asContext_GetVarDeclaration( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, bool includeNamespace = false );
-	AS_API void* asContext_GetAddressOfVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, bool dontDereference, bool returnAddressOfUnitializedObjects );
-	AS_API bool asContext_IsVarInScope( asIScriptContext* context, asUINT varIndex, asUINT stackLevel );
+	AS_API int asContext_GetVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, const char** name, int* typeId, asETypeModifiers* typeModifiers, asBOOL* isVarOnHeap, int* stackOffset );
+	AS_API const char* asContext_GetVarDeclaration( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, asBOOL includeNamespace );
+	AS_API void* asContext_GetAddressOfVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, asBOOL dontDereference, asBOOL returnAddressOfUnitializedObjects );
+	AS_API asBOOL asContext_IsVarInScope( asIScriptContext* context, asUINT varIndex, asUINT stackLevel );
 	AS_API int asContext_GetThisTypeId( asIScriptContext* context, asUINT stackLevel );
 	AS_API void* asContext_GetThisPointer( asIScriptContext* context, asUINT stackLevel );
 	AS_API asIScriptFunction* asContext_GetSystemFunction( asIScriptContext* context );
@@ -785,7 +784,7 @@
 	AS_API const char* asTypeInfo_GetName( asITypeInfo* info );
 	AS_API const char* asTypeInfo_GetNamespace( asITypeInfo* info );
 	AS_API asITypeInfo* asTypeInfo_GetBaseType( asITypeInfo* info );
-	AS_API bool asTypeInfo_DerivesFrom( asITypeInfo* info, const asITypeInfo* objType );
+	AS_API asBOOL asTypeInfo_DerivesFrom( asITypeInfo* info, const asITypeInfo* objType );
 	AS_API asDWORD asTypeInfo_GetFlags( asITypeInfo* info );
 	AS_API asUINT asTypeInfo_GetSize( asITypeInfo* info );
 	AS_API int asTypeInfo_GetTypeId( asITypeInfo* info );
@@ -796,7 +795,7 @@
 	// Interfaces
 	AS_API asUINT asTypeInfo_GetInterfaceCount( asITypeInfo* info );
 	AS_API asITypeInfo* asTypeInfo_GetInterface( asITypeInfo* info, asUINT index );
-	AS_API bool asTypeInfo_Implements( asITypeInfo* info, const asITypeInfo* objType );
+	AS_API asBOOL asTypeInfo_Implements( asITypeInfo* info, const asITypeInfo* objType );
 
 	// Factories
 	AS_API asUINT asTypeInfo_GetFactoryCount( asITypeInfo* info );
@@ -805,14 +804,14 @@
 
 	// Methods
 	AS_API asUINT asTypeInfo_GetMethodCount( asITypeInfo* info );
-	AS_API asIScriptFunction* asTypeInfo_GetMethodByIndex( asITypeInfo* info, asUINT index, bool getVirtual );
-	AS_API asIScriptFunction* asTypeInfo_GetMethodByName( asITypeInfo* info, const char* name, bool getVirtual );
-	AS_API asIScriptFunction* asTypeInfo_GetMethodByDecl( asITypeInfo* info, const char* decl, bool getVirtual );
+	AS_API asIScriptFunction* asTypeInfo_GetMethodByIndex( asITypeInfo* info, asUINT index, asBOOL getVirtual );
+	AS_API asIScriptFunction* asTypeInfo_GetMethodByName( asITypeInfo* info, const char* name, asBOOL getVirtual );
+	AS_API asIScriptFunction* asTypeInfo_GetMethodByDecl( asITypeInfo* info, const char* decl, asBOOL getVirtual );
 
 	// Properties
 	AS_API asUINT asTypeInfo_GetPropertyCount( asITypeInfo* info );
-	AS_API int asTypeInfo_GetProperty( asITypeInfo* info, asUINT index, const char** name, int* typeId, bool* isPrivate, bool* isProtected, int* offset, bool* isReference, asDWORD* accessMask, int* compositeOffset, bool* isCompositeIndirect );
-	AS_API const char* asTypeInfo_GetPropertyDeclaration( asITypeInfo* info, asUINT index, bool includeNamespace );
+	AS_API int asTypeInfo_GetProperty( asITypeInfo* info, asUINT index, const char** name, int* typeId, asBOOL* isPrivate, asBOOL* isProtected, int* offset, asBOOL* isReference, asDWORD* accessMask, int* compositeOffset, asBOOL* isCompositeIndirect );
+	AS_API const char* asTypeInfo_GetPropertyDeclaration( asITypeInfo* info, asUINT index, asBOOL includeNamespace );
 
 	// Behaviours
 	AS_API asUINT asTypeInfo_GetBehaviourCount( asITypeInfo* info );
@@ -860,22 +859,22 @@
 	AS_API const char* asFunction_GetObjectName( asIScriptFunction* function );
 	AS_API const char* asFunction_GetName( asIScriptFunction* function );
 	AS_API const char* asFunction_GetNamespace( asIScriptFunction* function );
-	AS_API const char* asFunction_GetDeclaration( asIScriptFunction* function, bool includeObjectName, bool includeNamespace, bool includeParamNames );
-	AS_API bool asFunction_IsReadOnly( asIScriptFunction* function );
-	AS_API bool asFunction_IsPrivate( asIScriptFunction* function );
-	AS_API bool asFunction_IsProtected( asIScriptFunction* function );
-	AS_API bool asFunction_IsFinal( asIScriptFunction* function );
-	AS_API bool asFunction_IsOverride( asIScriptFunction* function );
-	AS_API bool asFunction_IsShared( asIScriptFunction* function );
-	AS_API bool asFunction_IsExplicit( asIScriptFunction* function );
-	AS_API bool asFunction_IsProperty( asIScriptFunction* function );
+	AS_API const char* asFunction_GetDeclaration( asIScriptFunction* function, asBOOL includeObjectName, asBOOL includeNamespace, asBOOL includeParamNames );
+	AS_API asBOOL asFunction_IsReadOnly( asIScriptFunction* function );
+	AS_API asBOOL asFunction_IsPrivate( asIScriptFunction* function );
+	AS_API asBOOL asFunction_IsProtected( asIScriptFunction* function );
+	AS_API asBOOL asFunction_IsFinal( asIScriptFunction* function );
+	AS_API asBOOL asFunction_IsOverride( asIScriptFunction* function );
+	AS_API asBOOL asFunction_IsShared( asIScriptFunction* function );
+	AS_API asBOOL asFunction_IsExplicit( asIScriptFunction* function );
+	AS_API asBOOL asFunction_IsProperty( asIScriptFunction* function );
 	AS_API asUINT asFunction_GetParamCount( asIScriptFunction* function );
 	AS_API int asFunction_GetParam( asIScriptFunction* function, asUINT index, int* typeId, asDWORD* flags, const char** name, const char** defaultArg );
 	AS_API int asFunction_GetReturnTypeId( asIScriptFunction* function, asDWORD* flags );
 
 	// Type id for function pointers
 	AS_API int asFunction_GetTypeId( asIScriptFunction* function );
-	AS_API bool asFunction_IsCompatibleWithTypeId( asIScriptFunction* function, int typeId );
+	AS_API asBOOL asFunction_IsCompatibleWithTypeId( asIScriptFunction* function, int typeId );
 
 	// Delegates
 	AS_API void* asFunction_GetDelegateObject( asIScriptFunction* function );
@@ -885,7 +884,7 @@
 	// Debug information
 	AS_API asUINT asFunction_GetVarCount( asIScriptFunction* function );
 	AS_API int asFunction_GetVar( asIScriptFunction* function, asUINT index, const char** name, int* typeId );
-	AS_API const char* asFunction_GetVarDecl( asIScriptFunction* function, asUINT index, bool includeNamespace );
+	AS_API const char* asFunction_GetVarDecl( asIScriptFunction* function, asUINT index, asBOOL includeNamespace );
 	AS_API int asFunction_FindNextLineWithCode( asIScriptFunction* function, int line );
 
 	// For JIT compilation
@@ -896,19 +895,19 @@
 	AS_API void* asFunction_GetUserData( asIScriptFunction* function, asPWORD type );
 	// endregion Interface declarations - function
 
-	// region Interface declarations - lockable shared bool
+	// region Interface declarations - lockable shared asBOOL
 	// Memory management
 	AS_API int asLockableSharedBool_AddRef( asILockableSharedBool* lockable );
 	AS_API int asLockableSharedBool_Release( asILockableSharedBool* lockable );
 
 	// Value
-	AS_API bool asLockableSharedBool_Get( asILockableSharedBool* lockable );
-	AS_API void asLockableSharedBool_Set( asILockableSharedBool* lockable, bool val );
+	AS_API asBOOL asLockableSharedBool_Get( asILockableSharedBool* lockable );
+	AS_API void asLockableSharedBool_Set( asILockableSharedBool* lockable, asBOOL val );
 
 	// Thread management
 	AS_API void asLockableSharedBool_Lock( asILockableSharedBool* lockable );
 	AS_API void asLockableSharedBool_Unlock( asILockableSharedBool* lockable );
-	// endregion Interface declarations - lockable shared bool
+	// endregion Interface declarations - lockable shared asBOOL
 
 	#ifdef __cplusplus
 		}
