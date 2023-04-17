@@ -18,8 +18,17 @@ struct asBinaryStream {
 	void* user;
 };
 
-enum asBOOL_t : unsigned char { asFALSE = 0, asTRUE = 1 };
+struct asJITCompiler {
+	int ( *compileFunction )( asIScriptFunction* function, asJITFunction* output, void* user );
+	int ( *releaseJITFunction )( asJITFunction func, void* user );
+	void* user;
+};
 
+struct asThreadManager {
+	void* user;
+};
+
+enum asBOOL_t : unsigned char { asFALSE = 0, asTRUE = 1 };
 
 
 class asCStringFactory : public asIStringFactory {
@@ -51,6 +60,33 @@ public:
 	int Read( void* ptr, asUINT size ) override {
 		return this->impl->read( ptr, size, this->impl->user );
 	}
+};
+
+class asCJITCompiler : public asIJITCompiler {
+private:
+	asJITCompiler* impl;
+public:
+	explicit asCJITCompiler( asJITCompiler* compiler ) : impl( compiler ) { };
+	int CompileFunction( asIScriptFunction* function, asJITFunction* output ) override {
+		return this->impl->compileFunction( function, output, this->impl->user );
+	};
+	void ReleaseJITFunction( asJITFunction func ) override {
+		this->impl->releaseJITFunction( func, this->impl->user );
+	};
+	explicit operator asJITCompiler*() {
+		return this->impl;
+	};
+};
+
+class asCThreadManager : public asIJITCompiler {
+private:
+	asThreadManager* impl;
+public:
+	explicit asCThreadManager( asThreadManager* manager ) : impl( manager ) { };
+
+	explicit operator asThreadManager*() {
+		return this->impl;
+	};
 };
 
 extern "C" {
@@ -86,11 +122,11 @@ extern "C" {
 	}
 
 	// JIT Compiler
-	int asEngine_SetJITCompiler( asIScriptEngine* engine, asIJITCompiler* compiler ) {
-		return engine->SetJITCompiler( compiler );
+	int asEngine_SetJITCompiler( asIScriptEngine* engine, asJITCompiler* compiler ) {
+		return engine->SetJITCompiler( new asCJITCompiler( compiler ) );
 	}
-	asIJITCompiler* asEngine_GetJITCompiler( asIScriptEngine* engine ) {
-		return engine->GetJITCompiler();
+	asJITCompiler* asEngine_GetJITCompiler( asIScriptEngine* engine ) {
+		return (asJITCompiler*) (asCJITCompiler*) engine->GetJITCompiler();
 	}
 
 	// Global functions
