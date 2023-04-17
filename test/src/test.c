@@ -7,7 +7,7 @@
 
 #include "stdio.h"
 
-void messageCallback( const asSMessageInfo* msg, void* obj ) {
+void __stdcall messageCallback( const asSMessageInfo* msg, void* obj ) {
 	printf( "Received message from VM: `%s`\n", msg->message );
 }
 
@@ -24,8 +24,8 @@ int main() {
 	asIScriptEngine* engine = asCreateScriptEngine( ANGELSCRIPT_VERSION );
 
 	// setup engine
-	TRY(asEngine_SetMessageCallback( engine, messageCallback, NULL, asCALL_CDECL ));
-	TRY(asEngine_RegisterGlobalFunction( engine, "void print(const int)", print, asCALL_CDECL, NULL ));
+	TRY(asEngine_SetMessageCallback( engine, messageCallback, NULL, asCALL_STDCALL ));
+	TRY(asEngine_RegisterGlobalFunction( engine, "void print(const int)", print, asCALL_STDCALL, NULL ));
 
 	// setup script
 	asIScriptModule* module = asEngine_GetModule( engine, "app", asGM_ALWAYS_CREATE );
