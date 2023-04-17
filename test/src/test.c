@@ -2,7 +2,7 @@
 // Created by ENDERZOMBI102 on 20/03/2023.
 //
 
-#include "angelscript_c.h"
+#include "angelscript/angelscript_c.h"
 #include <assert.h>
 
 #include "stdio.h"
