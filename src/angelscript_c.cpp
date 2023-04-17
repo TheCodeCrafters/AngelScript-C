@@ -2,51 +2,38 @@
 // Created by Firmament on 19/03/2023.
 //
 
+#include "angelscript_c.h"
 #include "../vendor/sdk/angelscript/include/angelscript.h"
 
-class asStringFactory : public asIStringFactory {
+class asCStringFactory : public asIStringFactory {
+private:
+	asStringFactory* impl;
 public:
-	using asSTRINGGETFUNC_t = const void*( const char* data, asUINT length, void* param );
-	using asSTRINGRELEASEFUNC_t = int( const void* str, void* param );
-	using asSTRINGGETRAWFUNC_t = int( const void* str, char* data, asUINT* length, void* param );
+	explicit asCStringFactory( asStringFactory* factory ) : impl( factory ) { }
 
-	asStringFactory( asSTRINGGETFUNC_t* get, asSTRINGRELEASEFUNC_t release, asSTRINGGETRAWFUNC_t getRaw, void* param ) :
-		  get( get ), release( release ), getRaw( getRaw ), param( param ) { }
-
-	const void* GetStringConstant( const char* data, asUINT length ) override{
-		return this->get( data, length, this->param );
+	const void* GetStringConstant( const char* data, asUINT length ) override {
+		return this->impl->getStringConstant( data, length, this->impl->user );
 	};
-	int ReleaseStringConstant( const void* str ) override{
-		return this->release( str, this->param );
+	int ReleaseStringConstant( const void* str ) override {
+		return this->impl->releaseStringConstant( str, this->impl->user );
 	};
 	int GetRawStringData( const void* str, char* data, asUINT* length ) const override {
-		return this->getRaw( str, data, length, this->param );
+		return this->impl->getRawStringData( str, data, length, this->impl->user );
 	};
-
-	asSTRINGGETFUNC_t* get;
-	asSTRINGRELEASEFUNC_t* release;
-	asSTRINGGETRAWFUNC_t* getRaw;
-	void* param;
 };
 
-class asBinaryStream : public asIBinaryStream {
+class asCBinaryStream : public asIBinaryStream {
+private:
+	asBinaryStream* impl;
 public:
-	using asBINARYREADFUNC_t = int( void* ptr, asUINT size, void* param );
-	using asBINARYWRITEFUNC_t = int( const void* ptr, asUINT size, void* param );
-
-	asBinaryStream( asBINARYWRITEFUNC_t write, asBINARYREADFUNC_t read, void* param ) :
-		write( write ), read( read ), param( param ) { }
+	explicit asCBinaryStream( asBinaryStream* stream ) : impl( stream ) { }
 
 	int Write( const void* ptr, asUINT size ) override {
-		return this->write( ptr, size, this->param );
+		return this->impl->write( ptr, size, this->impl->user );
 	}
 	int Read( void* ptr, asUINT size ) override {
-		return this->read( ptr, size, this->param );
+		return this->impl->read( ptr, size, this->impl->user );
 	}
-
-	asBINARYREADFUNC_t* read;
-	asBINARYWRITEFUNC_t* write;
-	void* param;
 };
 
 extern "C" {
@@ -71,7 +58,7 @@ extern "C" {
 	}
 
 	// Compiler messages
-	int asEngine_SetMessageCallback( asIScriptEngine* engine, asFUNCTION_t& callback, void* obj, asDWORD callConv ) {
+	int asEngine_SetMessageCallback( asIScriptEngine* engine, asFUNCTION_t* callback, void* obj, asDWORD callConv ) {
 		return engine->SetMessageCallback( asFUNCTION( callback ), obj, callConv );
 	}
 	int asEngine_ClearMessageCallback( asIScriptEngine* engine ) {
@@ -90,7 +77,7 @@ extern "C" {
 	}
 
 	// Global functions
-	int asEngine_RegisterGlobalFunction( asIScriptEngine* engine, char* declaration, asFUNCTION_t& funcPointer, asDWORD callConv, void* auxiliary ) {
+	int asEngine_RegisterGlobalFunction( asIScriptEngine* engine, char* declaration, asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary ) {
 		return engine->RegisterGlobalFunction( declaration, asFUNCTION( funcPointer ), callConv, auxiliary );
 	}
 	asUINT asEngine_GetGlobalFunctionCount( asIScriptEngine* engine ) {
@@ -110,8 +97,8 @@ extern "C" {
 	asUINT asEngine_GetGlobalPropertyCount( asIScriptEngine* engine ) {
 		return engine->GetGlobalPropertyCount();
 	}
-	int asEngine_GetGlobalPropertyByIndex( asIScriptEngine* engine, asUINT index, const char** name, const char** nameSpace, int* typeId, bool* isConst, const char** configGroup, void** pointer, asDWORD* accessMask ) {
-		return engine->GetGlobalPropertyByIndex( index, name, nameSpace, typeId, isConst, configGroup, pointer, accessMask );
+	int asEngine_GetGlobalPropertyByIndex( asIScriptEngine* engine, asUINT index, const char** name, const char** nameSpace, int* typeId, asBOOL* isConst, const char** configGroup, void** pointer, asDWORD* accessMask ) {
+		return engine->GetGlobalPropertyByIndex( index, name, nameSpace, typeId, (bool*) isConst, configGroup, pointer, accessMask );
 	}
 	int asEngine_GetGlobalPropertyIndexByName( asIScriptEngine* engine, const char* name ) {
 		return engine->GetGlobalPropertyIndexByName( name );
@@ -124,14 +111,14 @@ extern "C" {
 	int asEngine_RegisterObjectType( asIScriptEngine* engine, const char* obj, int byteSize, asDWORD flags ) {
 		return engine->RegisterObjectType( obj, byteSize, flags );
 	}
-	int asEngine_RegisterObjectProperty( asIScriptEngine* engine, const char* obj, const char* declaration, int byteOffset, int compositeOffset, bool isCompositeIndirect ) {
+	int asEngine_RegisterObjectProperty( asIScriptEngine* engine, const char* obj, const char* declaration, int byteOffset, int compositeOffset, asBOOL isCompositeIndirect ) {
 		return engine->RegisterObjectProperty( obj, declaration, byteOffset, compositeOffset, isCompositeIndirect );
 	}
-	int asEngine_RegisterObjectMethod( asIScriptEngine* engine, const char* obj, const char* declaration, const asFUNCTION_t& funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, bool isCompositeIndirect ) {
-		return engine->RegisterObjectMethod( obj, declaration, asFUNCTION( funcPointer ), callConv, auxiliary, compositeOffset, isCompositeIndirect );
+	int asEngine_RegisterObjectMethod( asIScriptEngine* engine, const char* obj, const char* declaration, const asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, asBOOL isCompositeIndirect ) {
+		return engine->RegisterObjectMethod( obj, declaration, asFUNCTION( funcPointer ), callConv, auxiliary, compositeOffset, (bool*) isCompositeIndirect );
 	}
-	int asEngine_RegisterObjectBehaviour( asIScriptEngine* engine, const char* obj, asEBehaviours behaviour, const char* declaration, const asFUNCTION_t& funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, bool isCompositeIndirect ) {
-		return engine->RegisterObjectBehaviour( obj, behaviour, declaration, asFUNCTION( funcPointer ), callConv, auxiliary, compositeOffset, isCompositeIndirect );
+	int asEngine_RegisterObjectBehaviour( asIScriptEngine* engine, const char* obj, asEBehaviours behaviour, const char* declaration, const asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, asBOOL isCompositeIndirect ) {
+		return engine->RegisterObjectBehaviour( obj, behaviour, declaration, asFUNCTION( funcPointer ), callConv, auxiliary, compositeOffset, (bool*) isCompositeIndirect );
 	}
 	int asEngine_RegisterInterface( asIScriptEngine* engine, const char* name ) {
 		return engine->RegisterInterface( name );
@@ -148,7 +135,7 @@ extern "C" {
 
 	// String factory
 	int asEngine_RegisterStringFactory( asIScriptEngine* engine, const char* datatype, asStringFactory* factory ) {
-		return engine->RegisterStringFactory( datatype, factory );
+		return engine->RegisterStringFactory( datatype, asCStringFactory(factory) );
 	}
 	int asEngine_GetStringFactoryReturnTypeId( asIScriptEngine* engine, asDWORD* flags ) {
 		return engine->GetStringFactoryReturnTypeId( flags );

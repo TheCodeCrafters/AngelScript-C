@@ -327,7 +327,7 @@
 			typedef __int64 asINT64;
 		#endif
 	#endif
-	typedef enum { asTRUE = 1, asFALSE = 0 } asBOOL;
+	typedef enum asBOOL : asBYTE { asTRUE = 1, asFALSE = 0 } asBOOL;
 
 	typedef void ( *asFUNCTION_t )();
 	typedef void ( *asGENFUNC_t )( asIScriptGeneric* );
@@ -377,16 +377,16 @@
 	} asSMessageInfo;
 
 	typedef struct {
-		const void* ( *getStringConstant )( const char* data, asUINT length );
-		int ( *releaseStringConstant )( const void* str );
-		int ( *getRawStringData )( const void* str, char* data, asUINT length );
-		void* param;
+		const void* ( *getStringConstant )( const char* data, asUINT length, void* user );
+		int ( *releaseStringConstant )( const void* str, void* user );
+		int ( *getRawStringData )( const void* str, char* data, asUINT* length, void* user );
+		void* user;
 	} asStringFactory;
 
 	typedef struct {
-		int ( *read )( void* ptr, asUINT size, void* param );
-		int ( *write )( const void* ptr, asUINT size, void* param );
-		void* param;
+		int ( *read )( void* ptr, asUINT size, void* user );
+		int ( *write )( const void* ptr, asUINT size, void* user );
+		void* user;
 	} asBinaryStream;
 
 	// region API functions
@@ -495,8 +495,7 @@
 	AS_API const char* asEngine_GetDefaultNamespace( asIScriptEngine* engine );
 
 	// Script modules
-	AS_API asIScriptModule*
-	asEngine_GetModule( asIScriptEngine* engine, const char* module, asEGMFlags flag );
+	AS_API asIScriptModule* asEngine_GetModule( asIScriptEngine* engine, const char* module, asEGMFlags flag );
 	AS_API int asEngine_DiscardModule( asIScriptEngine* engine, const char* module );
 	AS_API asUINT asEngine_GetModuleCount( asIScriptEngine* engine );
 	AS_API asIScriptModule* asEngine_GetModuleByIndex( asIScriptEngine* engine, asUINT index );
@@ -565,8 +564,7 @@
 	// Compilation
 	AS_API int asModule_AddScriptSection( asIScriptModule* module, const char* name, const char* code, size_t codeLength, int lineOffset );
 	AS_API int asModule_Build( asIScriptModule* module );
-	AS_API int asModule_CompileFunction( asIScriptModule* module, const char* sectionName, const char* code, int lineOffset, asDWORD compileFlags,
-										 asIScriptFunction** outFunc );
+	AS_API int asModule_CompileFunction( asIScriptModule* module, const char* sectionName, const char* code, int lineOffset, asDWORD compileFlags, asIScriptFunction** outFunc );
 	AS_API int asModule_CompileGlobalVar( asIScriptModule* module, const char* sectionName, const char* code, int lineOffset );
 	AS_API asDWORD asModule_SetAccessMask( asIScriptModule* module, asDWORD accessMask );
 	AS_API int asModule_SetDefaultNamespace( asIScriptModule* module, const char* nameSpace );
