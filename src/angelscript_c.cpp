@@ -2,8 +2,25 @@
 // Created by Firmament on 19/03/2023.
 //
 
-#include "angelscript_c.h"
 #include "../vendor/sdk/angelscript/include/angelscript.h"
+
+
+struct asStringFactory {
+	const void* ( *getStringConstant )( const char* data, asUINT length, void* user );
+	int ( *releaseStringConstant )( const void* str, void* user );
+	int ( *getRawStringData )( const void* str, char* data, asUINT* length, void* user );
+	void* user;
+};
+
+struct asBinaryStream {
+	int ( *read )( void* ptr, asUINT size, void* user );
+	int ( *write )( const void* ptr, asUINT size, void* user );
+	void* user;
+};
+
+enum asBOOL_t : unsigned char { asFALSE = 0, asTRUE = 1 };
+
+
 
 class asCStringFactory : public asIStringFactory {
 private:
@@ -97,8 +114,8 @@ extern "C" {
 	asUINT asEngine_GetGlobalPropertyCount( asIScriptEngine* engine ) {
 		return engine->GetGlobalPropertyCount();
 	}
-	int asEngine_GetGlobalPropertyByIndex( asIScriptEngine* engine, asUINT index, const char** name, const char** nameSpace, int* typeId, asBOOL* isConst, const char** configGroup, void** pointer, asDWORD* accessMask ) {
-		return engine->GetGlobalPropertyByIndex( index, name, nameSpace, typeId, (bool*) isConst, configGroup, pointer, accessMask );
+	int asEngine_GetGlobalPropertyByIndex( asIScriptEngine* engine, asUINT index, const char** name, const char** nameSpace, int* typeId, asBOOL_t* isConst, const char** configGroup, void** pointer, asDWORD* accessMask ) {
+		return engine->GetGlobalPropertyByIndex( index, name, nameSpace, typeId, reinterpret_cast<bool*>( isConst ), configGroup, pointer, accessMask );
 	}
 	int asEngine_GetGlobalPropertyIndexByName( asIScriptEngine* engine, const char* name ) {
 		return engine->GetGlobalPropertyIndexByName( name );
@@ -111,14 +128,14 @@ extern "C" {
 	int asEngine_RegisterObjectType( asIScriptEngine* engine, const char* obj, int byteSize, asDWORD flags ) {
 		return engine->RegisterObjectType( obj, byteSize, flags );
 	}
-	int asEngine_RegisterObjectProperty( asIScriptEngine* engine, const char* obj, const char* declaration, int byteOffset, int compositeOffset, asBOOL isCompositeIndirect ) {
+	int asEngine_RegisterObjectProperty( asIScriptEngine* engine, const char* obj, const char* declaration, int byteOffset, int compositeOffset, asBOOL_t isCompositeIndirect ) {
 		return engine->RegisterObjectProperty( obj, declaration, byteOffset, compositeOffset, isCompositeIndirect );
 	}
-	int asEngine_RegisterObjectMethod( asIScriptEngine* engine, const char* obj, const char* declaration, const asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, asBOOL isCompositeIndirect ) {
-		return engine->RegisterObjectMethod( obj, declaration, asFUNCTION( funcPointer ), callConv, auxiliary, compositeOffset, (bool*) isCompositeIndirect );
+	int asEngine_RegisterObjectMethod( asIScriptEngine* engine, const char* obj, const char* declaration, asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, asBOOL_t isCompositeIndirect ) {
+		return engine->RegisterObjectMethod( obj, declaration, asFUNCTION( funcPointer ), callConv, auxiliary, compositeOffset, reinterpret_cast<bool*>( isCompositeIndirect ) );
 	}
-	int asEngine_RegisterObjectBehaviour( asIScriptEngine* engine, const char* obj, asEBehaviours behaviour, const char* declaration, const asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, asBOOL isCompositeIndirect ) {
-		return engine->RegisterObjectBehaviour( obj, behaviour, declaration, asFUNCTION( funcPointer ), callConv, auxiliary, compositeOffset, (bool*) isCompositeIndirect );
+	int asEngine_RegisterObjectBehaviour( asIScriptEngine* engine, const char* obj, asEBehaviours behaviour, const char* declaration, asFUNCTION_t* funcPointer, asDWORD callConv, void* auxiliary, int compositeOffset, asBOOL_t isCompositeIndirect ) {
+		return engine->RegisterObjectBehaviour( obj, behaviour, declaration, asFUNCTION( funcPointer ), callConv, auxiliary, compositeOffset, reinterpret_cast<bool*>( isCompositeIndirect ) );
 	}
 	int asEngine_RegisterInterface( asIScriptEngine* engine, const char* name ) {
 		return engine->RegisterInterface( name );
@@ -135,7 +152,7 @@ extern "C" {
 
 	// String factory
 	int asEngine_RegisterStringFactory( asIScriptEngine* engine, const char* datatype, asStringFactory* factory ) {
-		return engine->RegisterStringFactory( datatype, asCStringFactory(factory) );
+		return engine->RegisterStringFactory( datatype, new asCStringFactory(factory) );
 	}
 	int asEngine_GetStringFactoryReturnTypeId( asIScriptEngine* engine, asDWORD* flags ) {
 		return engine->GetStringFactoryReturnTypeId( flags );
@@ -228,7 +245,7 @@ extern "C" {
 	int asEngine_GetTypeIdByDecl( asIScriptEngine* engine, const char* decl ) {
 		return engine->GetTypeIdByDecl( decl );
 	}
-	const char* asEngine_GetTypeDeclaration( asIScriptEngine* engine, int typeId, bool includeNamespace ) {
+	const char* asEngine_GetTypeDeclaration( asIScriptEngine* engine, int typeId, asBOOL_t includeNamespace ) {
 		return engine->GetTypeDeclaration( typeId, includeNamespace );
 	}
 	int asEngine_GetSizeOfPrimitiveType( asIScriptEngine* engine, int typeId ) {
@@ -269,7 +286,7 @@ extern "C" {
 	void asEngine_AddRefScriptObject( asIScriptEngine* engine, void* obj, const asITypeInfo* type ) {
 		return engine->AddRefScriptObject( obj, type );
 	}
-	int asEngine_RefCastObject( asIScriptEngine* engine, void* obj, asITypeInfo* fromType, asITypeInfo* toType, void** newPtr, bool useOnlyImplicitCast ) {
+	int asEngine_RefCastObject( asIScriptEngine* engine, void* obj, asITypeInfo* fromType, asITypeInfo* toType, void** newPtr, asBOOL_t useOnlyImplicitCast ) {
 		return engine->RefCastObject( obj, fromType, toType, newPtr, useOnlyImplicitCast );
 	}
 	asILockableSharedBool* asEngine_GetWeakRefFlagOfScriptObject( asIScriptEngine* engine, void* obj, const asITypeInfo* type ) {
@@ -417,11 +434,11 @@ extern "C" {
 	int asModule_GetGlobalVarIndexByDecl( asIScriptModule* module, const char* decl ) {
 		return module->GetGlobalVarIndexByDecl( decl );
 	}
-	const char* asModule_GetGlobalVarDeclaration( asIScriptModule* module, asUINT index, bool includeNamespace = false ) {
+	const char* asModule_GetGlobalVarDeclaration( asIScriptModule* module, asUINT index, asBOOL_t includeNamespace = asFALSE ) {
 		return module->GetGlobalVarDeclaration( index, includeNamespace );
 	}
-	int asModule_GetGlobalVar( asIScriptModule* module, asUINT index, const char** name, const char** nameSpace, int* typeId, bool* isConst ) {
-		return module->GetGlobalVar( index, name, nameSpace, typeId, isConst );
+	int asModule_GetGlobalVar( asIScriptModule* module, asUINT index, const char** name, const char** nameSpace, int* typeId, asBOOL_t* isConst ) {
+		return module->GetGlobalVar( index, name, nameSpace, typeId, reinterpret_cast<bool*>( isConst ) );
 	}
 	void* asModule_GetAddressOfGlobalVar( asIScriptModule* module, asUINT index ) {
 		return module->GetAddressOfGlobalVar( index );
@@ -490,11 +507,11 @@ extern "C" {
 	}
 
 	// Byte code saving and loading
-	int asModule_SaveByteCode( asIScriptModule* module, asBinaryStream* out, bool stripDebugInfo ) {
-		return module->SaveByteCode( out, stripDebugInfo );
+	int asModule_SaveByteCode( asIScriptModule* module, asBinaryStream* out, asBOOL_t stripDebugInfo ) {
+		return module->SaveByteCode( new asCBinaryStream(out), static_cast<bool>( stripDebugInfo ) );
 	}
-	int asModule_LoadByteCode( asIScriptModule* module, asBinaryStream* in, bool* wasDebugInfoStripped ) {
-		return module->LoadByteCode( in, wasDebugInfoStripped );
+	int asModule_LoadByteCode( asIScriptModule* module, asBinaryStream* in, asBOOL_t* wasDebugInfoStripped ) {
+		return module->LoadByteCode( new asCBinaryStream(in), reinterpret_cast<bool*>( wasDebugInfoStripped ) );
 	}
 
 	// User data
@@ -544,8 +561,8 @@ extern "C" {
 	int asContext_PopState( asIScriptContext* context ) {
 		return context->PopState();
 	}
-	bool asContext_IsNested( asIScriptContext* context, asUINT* nestCount ) {
-		return context->IsNested( nestCount );
+	asBOOL_t asContext_IsNested( asIScriptContext* context, asUINT* nestCount ) {
+		return static_cast<asBOOL_t>( context->IsNested( nestCount ) );
 	}
 
 	// Object pointer for calling class methods
@@ -615,8 +632,8 @@ extern "C" {
 	}
 
 	// Exception handling
-	int asContext_SetException( asIScriptContext* context, const char* info, bool allowCatch ) {
-		return context->SetException( info, allowCatch );
+	int asContext_SetException( asIScriptContext* context, const char* info, asBOOL_t allowCatch ) {
+		return context->SetException( info, static_cast<bool>( allowCatch ) );
 	}
 	int asContext_GetExceptionLineNumber( asIScriptContext* context, int* column, const char** sectionName ) {
 		return context->GetExceptionLineNumber( column, sectionName );
@@ -627,8 +644,8 @@ extern "C" {
 	const char* asContext_GetExceptionString( asIScriptContext* context ) {
 		return context->GetExceptionString();
 	}
-	bool asContext_WillExceptionBeCaught( asIScriptContext* context ) {
-		return context->WillExceptionBeCaught();
+	asBOOL_t asContext_WillExceptionBeCaught( asIScriptContext* context ) {
+		return static_cast<asBOOL_t>( context->WillExceptionBeCaught() );
 	}
 	int asContext_SetExceptionCallback( asIScriptContext* context, asFUNCTION_t callback, void* obj, int callConv ) {
 		return context->SetExceptionCallback( asFUNCTION( callback ), obj, callConv );
@@ -656,17 +673,17 @@ extern "C" {
 	int asContext_GetVarCount( asIScriptContext* context, asUINT stackLevel ) {
 		return context->GetVarCount( stackLevel );
 	}
-	int asContext_GetVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, const char** name, int* typeId, asETypeModifiers* typeModifiers, bool* isVarOnHeap, int* stackOffset ) {
-		return context->GetVar( varIndex, stackLevel, name, typeId, typeModifiers, isVarOnHeap, stackOffset );
+	int asContext_GetVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, const char** name, int* typeId, asETypeModifiers* typeModifiers, asBOOL_t* isVarOnHeap, int* stackOffset ) {
+		return context->GetVar( varIndex, stackLevel, name, typeId, typeModifiers, reinterpret_cast<bool*>( isVarOnHeap ), stackOffset );
 	}
-	const char* asContext_GetVarDeclaration( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, bool includeNamespace = false ) {
+	const char* asContext_GetVarDeclaration( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, asBOOL_t includeNamespace = asFALSE ) {
 		return context->GetVarDeclaration( varIndex, stackLevel, includeNamespace );
 	}
-	void* asContext_GetAddressOfVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, bool dontDereference, bool returnAddressOfUnitializedObjects ) {
+	void* asContext_GetAddressOfVar( asIScriptContext* context, asUINT varIndex, asUINT stackLevel, asBOOL_t dontDereference, asBOOL_t returnAddressOfUnitializedObjects ) {
 		return context->GetAddressOfVar( varIndex, stackLevel, dontDereference, returnAddressOfUnitializedObjects );
 	}
-	bool asContext_IsVarInScope( asIScriptContext* context, asUINT varIndex, asUINT stackLevel ) {
-		return context->IsVarInScope( varIndex, stackLevel );
+	asBOOL_t asContext_IsVarInScope( asIScriptContext* context, asUINT varIndex, asUINT stackLevel ) {
+		return static_cast<asBOOL_t>( context->IsVarInScope( varIndex, stackLevel ) );
 	}
 	int asContext_GetThisTypeId( asIScriptContext* context, asUINT stackLevel ) {
 		return context->GetThisTypeId( stackLevel );
@@ -888,8 +905,8 @@ extern "C" {
 	asITypeInfo* asTypeInfo_GetBaseType( asITypeInfo* info ) {
 		return info->GetBaseType();
 	}
-	bool asTypeInfo_DerivesFrom( asITypeInfo* info, const asITypeInfo* objType ) {
-		return info->DerivesFrom( objType );
+	asBOOL_t asTypeInfo_DerivesFrom( asITypeInfo* info, const asITypeInfo* objType ) {
+		return static_cast<asBOOL_t>( info->DerivesFrom( objType ) );
 	}
 	asDWORD asTypeInfo_GetFlags( asITypeInfo* info ) {
 		return info->GetFlags();
@@ -917,8 +934,8 @@ extern "C" {
 	asITypeInfo* asTypeInfo_GetInterface( asITypeInfo* info, asUINT index ) {
 		return info->GetInterface( index );
 	}
-	bool asTypeInfo_Implements( asITypeInfo* info, const asITypeInfo* objType ) {
-		return info->Implements( objType );
+	asBOOL_t asTypeInfo_Implements( asITypeInfo* info, const asITypeInfo* objType ) {
+		return static_cast<asBOOL_t>( info->Implements( objType ) );
 	}
 
 	// Factories
@@ -936,25 +953,25 @@ extern "C" {
 	asUINT asTypeInfo_GetMethodCount( asITypeInfo* info ) {
 		return info->GetMethodCount();
 	}
-	asIScriptFunction* asTypeInfo_GetMethodByIndex( asITypeInfo* info, asUINT index, bool getVirtual ) {
-		return info->GetMethodByIndex( index, getVirtual );
+	asIScriptFunction* asTypeInfo_GetMethodByIndex( asITypeInfo* info, asUINT index, asBOOL_t getVirtual ) {
+		return info->GetMethodByIndex( index, static_cast<bool>( getVirtual ) );
 	}
-	asIScriptFunction* asTypeInfo_GetMethodByName( asITypeInfo* info, const char* name, bool getVirtual ) {
-		return info->GetMethodByName( name, getVirtual );
+	asIScriptFunction* asTypeInfo_GetMethodByName( asITypeInfo* info, const char* name, asBOOL_t getVirtual ) {
+		return info->GetMethodByName( name, static_cast<bool>( getVirtual ) );
 	}
-	asIScriptFunction* asTypeInfo_GetMethodByDecl( asITypeInfo* info, const char* decl, bool getVirtual ) {
-		return info->GetMethodByDecl( decl, getVirtual );
+	asIScriptFunction* asTypeInfo_GetMethodByDecl( asITypeInfo* info, const char* decl, asBOOL_t getVirtual ) {
+		return info->GetMethodByDecl( decl, static_cast<bool>( getVirtual ) );
 	}
 
 	// Properties
 	asUINT asTypeInfo_GetPropertyCount( asITypeInfo* info ) {
 		return info->GetPropertyCount();
 	}
-	int asTypeInfo_GetProperty( asITypeInfo* info, asUINT index, const char** name, int* typeId, bool* isPrivate, bool* isProtected, int* offset, bool* isReference, asDWORD* accessMask, int* compositeOffset, bool* isCompositeIndirect ) {
-		return info->GetProperty( index, name, typeId, isPrivate, isProtected, offset, isReference, accessMask, compositeOffset, isCompositeIndirect );
+	int asTypeInfo_GetProperty( asITypeInfo* info, asUINT index, const char** name, int* typeId, asBOOL_t* isPrivate, asBOOL_t* isProtected, int* offset, asBOOL_t* isReference, asDWORD* accessMask, int* compositeOffset, asBOOL_t* isCompositeIndirect ) {
+		return info->GetProperty( index, name, typeId, reinterpret_cast<bool*>( isPrivate ), reinterpret_cast<bool*>( isProtected ), offset, reinterpret_cast<bool*>( isReference ), accessMask, compositeOffset, reinterpret_cast<bool*>( isCompositeIndirect ) );
 	}
-	const char* asTypeInfo_GetPropertyDeclaration( asITypeInfo* info, asUINT index, bool includeNamespace ) {
-		return info->GetPropertyDeclaration( index, includeNamespace );
+	const char* asTypeInfo_GetPropertyDeclaration( asITypeInfo* info, asUINT index, asBOOL_t includeNamespace ) {
+		return info->GetPropertyDeclaration( index, static_cast<bool>( includeNamespace ) );
 	}
 
 	// Behaviours
@@ -1055,32 +1072,32 @@ extern "C" {
 	const char* asFunction_GetNamespace( asIScriptFunction* function ) {
 		return function->GetNamespace();
 	}
-	const char* asFunction_GetDeclaration( asIScriptFunction* function, bool includeObjectName, bool includeNamespace, bool includeParamNames ) {
+	const char* asFunction_GetDeclaration( asIScriptFunction* function, asBOOL_t includeObjectName, asBOOL_t includeNamespace, asBOOL_t includeParamNames ) {
 		return function->GetDeclaration( includeObjectName, includeNamespace, includeParamNames );
 	}
-	bool asFunction_IsReadOnly( asIScriptFunction* function ) {
-		return function->IsReadOnly();
+	asBOOL_t asFunction_IsReadOnly( asIScriptFunction* function ) {
+		return static_cast<asBOOL_t>( function->IsReadOnly() );
 	}
-	bool asFunction_IsPrivate( asIScriptFunction* function ) {
-		return function->IsPrivate();
+	asBOOL_t asFunction_IsPrivate( asIScriptFunction* function ) {
+		return static_cast<asBOOL_t>( function->IsPrivate() );
 	}
-	bool asFunction_IsProtected( asIScriptFunction* function ) {
-		return function->IsProtected();
+	asBOOL_t asFunction_IsProtected( asIScriptFunction* function ) {
+		return static_cast<asBOOL_t>( function->IsProtected() );
 	}
-	bool asFunction_IsFinal( asIScriptFunction* function ) {
-		return function->IsFinal();
+	asBOOL_t asFunction_IsFinal( asIScriptFunction* function ) {
+		return static_cast<asBOOL_t>( function->IsFinal() );
 	}
-	bool asFunction_IsOverride( asIScriptFunction* function ) {
-		return function->IsOverride();
+	asBOOL_t asFunction_IsOverride( asIScriptFunction* function ) {
+		return static_cast<asBOOL_t>( function->IsOverride() );
 	}
-	bool asFunction_IsShared( asIScriptFunction* function ) {
-		return function->IsShared();
+	asBOOL_t asFunction_IsShared( asIScriptFunction* function ) {
+		return static_cast<asBOOL_t>( function->IsShared() );
 	}
-	bool asFunction_IsExplicit( asIScriptFunction* function ) {
-		return function->IsExplicit();
+	asBOOL_t asFunction_IsExplicit( asIScriptFunction* function ) {
+		return static_cast<asBOOL_t>( function->IsExplicit() );
 	}
-	bool asFunction_IsProperty( asIScriptFunction* function ) {
-		return function->IsProperty();
+	asBOOL_t asFunction_IsProperty( asIScriptFunction* function ) {
+		return static_cast<asBOOL_t>( function->IsProperty() );
 	}
 	asUINT asFunction_GetParamCount( asIScriptFunction* function ) {
 		return function->GetParamCount();
@@ -1096,8 +1113,8 @@ extern "C" {
 	int asFunction_GetTypeId( asIScriptFunction* function ) {
 		return function->GetTypeId();
 	}
-	bool asFunction_IsCompatibleWithTypeId( asIScriptFunction* function, int typeId ) {
-		return function->IsCompatibleWithTypeId( typeId );
+	asBOOL_t asFunction_IsCompatibleWithTypeId( asIScriptFunction* function, int typeId ) {
+		return static_cast<asBOOL_t>( function->IsCompatibleWithTypeId( typeId ) );
 	}
 
 	// Delegates
@@ -1118,7 +1135,7 @@ extern "C" {
 	int asFunction_GetVar( asIScriptFunction* function, asUINT index, const char** name, int* typeId ) {
 		return function->GetVar( index, name, typeId );
 	}
-	const char* asFunction_GetVarDecl( asIScriptFunction* function, asUINT index, bool includeNamespace ) {
+	const char* asFunction_GetVarDecl( asIScriptFunction* function, asUINT index, asBOOL_t includeNamespace ) {
 		return function->GetVarDecl( index, includeNamespace );
 	}
 	int asFunction_FindNextLineWithCode( asIScriptFunction* function, int line ) {
@@ -1149,10 +1166,10 @@ extern "C" {
 	}
 
 	// Value
-	bool asLockableSharedBool_Get( asILockableSharedBool* lockable ) {
-		return lockable->Get();
+	asBOOL_t asLockableSharedBool_Get( asILockableSharedBool* lockable ) {
+		return static_cast<asBOOL_t>( lockable->Get() );
 	}
-	void asLockableSharedBool_Set( asILockableSharedBool* lockable, bool val ) {
+	void asLockableSharedBool_Set( asILockableSharedBool* lockable, asBOOL_t val ) {
 		return lockable->Set( val );
 	}
 
