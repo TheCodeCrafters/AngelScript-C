@@ -8,24 +8,24 @@
 #include "stdio.h"
 
 void messageCallback( const asSMessageInfo* msg, void* obj ) {
-	printf( "Received message from VM: `%s`", msg->message );
+	printf( "Received message from VM: `%s`\n", msg->message );
 }
 
-void print( const int input ) {
-	printf( "Number is %d", input );
+void __stdcall print( const int input ) {
+	printf( "Number is %d\n", input );
 }
 
 #define TRY( expr ) r = expr; assert( r >= 0 )
 
 int main() {
-	printf( "AngelScript v%s compiled with options `%s`", asGetLibraryVersion(), asGetLibraryOptions() );
+	printf( "AngelScript v%s compiled with options `%s`\n", asGetLibraryVersion(), asGetLibraryOptions() );
 
 	int r;
 	asIScriptEngine* engine = asCreateScriptEngine( ANGELSCRIPT_VERSION );
 
 	// setup engine
 	TRY(asEngine_SetMessageCallback( engine, messageCallback, NULL, asCALL_CDECL ));
-	TRY(asEngine_RegisterGlobalFunction( engine, "void print(const int value)", print, asCALL_CDECL, NULL ));
+	TRY(asEngine_RegisterGlobalFunction( engine, "void print(const int)", print, asCALL_CDECL, NULL ));
 
 	// setup script
 	asIScriptModule* module = asEngine_GetModule( engine, "app", asGM_ALWAYS_CREATE );
