@@ -1,6 +1,0 @@
-add_executable( testing0 src/test.c )
-add_executable( testing1 src/test2.cpp )
-target_include_directories( testing0 PRIVATE ../include )
-target_include_directories( testing1 PRIVATE ../vendor/sdk/angelscript/include )
-target_link_libraries( testing0 PRIVATE AngelScriptC )
-target_link_libraries( testing1 PRIVATE angelscript )

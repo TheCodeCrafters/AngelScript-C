@@ -7,4 +7,8 @@ add_library( AngelScriptC STATIC src/angelscript_c.cpp include/angelscript/angel
 target_include_directories( AngelScriptC PUBLIC include )
 target_link_libraries( AngelScriptC angelscript )
 
-add_subdirectory( test )
+
+enable_testing()
+add_executable( MeaningOfLife test/meaning_of_life.c)
+target_link_libraries( MeaningOfLife PRIVATE AngelScriptC )
+add_test( NAME TestRunner COMMAND MeaningOfLife )
