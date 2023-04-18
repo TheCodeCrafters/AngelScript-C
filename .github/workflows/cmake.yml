@@ -1,4 +1,4 @@
-uname: CMake
+name: CMake
 
 on:
   push:
